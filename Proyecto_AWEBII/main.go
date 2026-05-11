@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	// Crear router
+	// Crear routerr
 	r := chi.NewRouter()
 
 	// Ruta de prueba
