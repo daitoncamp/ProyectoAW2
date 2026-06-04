@@ -1,4 +1,4 @@
-package inversiones
+package models
 
 import "time"
 
