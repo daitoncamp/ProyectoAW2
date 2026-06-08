@@ -42,25 +42,6 @@ Esto genera:
 
 ---
 
-##  Estructura del Proyecto
-
-
-Proyecto_AWEBII/
-│
-├── cmd/
-│
-├── internal/
-│   ├── estudiantes/
-│   ├── eventos/
-│   └── inversion/
-│
-├── main.go
-├── go.mod
-└── README.md
-```
-
----
-
 ## 👥 Integrantes
 
 -  Rodger Muñoz
