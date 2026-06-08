@@ -7,21 +7,30 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"Proyecto_AWEBII/internal/routes"
+
+	"Proyecto_AWEBII/internal/handlers"
+	"Proyecto_AWEBII/internal/storage"
 )
 
 func main() {
 
-	// Crear routerr
 	r := chi.NewRouter()
-	// Ruta de prueba
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API Asociación Estudiantil"))
 	})
 
-	// Rutas del módulo eventos
-	routes.EventoRoutes(r)
+	// Memoria de inversiones
+	memoria := storage.NuevaMemoria()
+	memoria.SeedInversiones()
 
-	// Iniciar servidor
+	// Rutas
+	routes.EventoRoutes(r)
+	routes.InversionRoutes(
+		r,
+		handlers.NewInversionHandler(memoria),
+	)
+
 	log.Println("Servidor ejecutándose en puerto 8080")
 
 	err := http.ListenAndServe(":8080", r)
