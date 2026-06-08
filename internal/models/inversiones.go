@@ -35,15 +35,3 @@ type Aporte struct {
 
 	CreadoEn time.Time `json:"creado_en"`
 }
-
-type Evento struct {
-	ID          uint `gorm:"primaryKey"`
-	Nombre      string
-	Descripcion string
-
-	InversionID uint
-
-	Fecha     time.Time
-	Capacidad int
-	Estado    string
-}
