@@ -3,49 +3,32 @@ package services
 import (
 	"Proyecto_AWEBII/internal/models"
 	"Proyecto_AWEBII/internal/storage"
-	"errors"
 )
 
-func ObtenerEventos() []models.Evento {
-	return storage.Eventos
-}
-func CrearEvento(evento models.Evento) {
-	storage.Eventos = append(storage.Eventos, evento)
+type EventoService struct {
+	repo storage.Almacen
 }
 
-func ObtenerEventoPorID(id int) (models.Evento, error) {
-	for _, evento := range storage.Eventos {
-		if evento.ID == id {
-			return evento, nil
-		}
-	}
-	return models.Evento{}, errors.New("evento no encontrado")
+func NewEventoService(repo storage.Almacen) *EventoService {
+	return &EventoService{repo: repo}
 }
 
-func ActualizarEvento(id int, eventoActualizado models.Evento) error {
-	for i, evento := range storage.Eventos {
-		if evento.ID == id {
-			storage.Eventos[i] = eventoActualizado
-			return nil
-		}
-	}
-	return errors.New("evento no encontrado")
+func (s *EventoService) ObtenerEventos() []models.Evento {
+	return s.repo.ListarEventos()
 }
 
-func EliminarEvento(id int) error {
-	for i, evento := range storage.Eventos {
-		if evento.ID == id {
-			storage.Eventos = append(storage.Eventos[:i], storage.Eventos[i+1:]...)
-			return nil
-		}
-	}
-	return errors.New("evento no encontrado")
+func (s *EventoService) ObtenerEventoPorID(id int) (models.Evento, bool) {
+	return s.repo.BuscarEventoPorID(id)
 }
 
-//funciones CRUD
+func (s *EventoService) CrearEvento(evento models.Evento) models.Evento {
+	return s.repo.CrearEvento(evento)
+}
 
-// CrearEvento()
-// ObtenerEventos()
-// ObtenerEventoPorID()
-// ActualizarEvento()
-// EliminarEvento()
+func (s *EventoService) ActualizarEvento(id int, evento models.Evento) (models.Evento, bool) {
+	return s.repo.ActualizarEvento(id, evento)
+}
+
+func (s *EventoService) EliminarEvento(id int) bool {
+	return s.repo.BorrarEvento(id)
+}
