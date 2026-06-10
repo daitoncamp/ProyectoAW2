@@ -7,9 +7,6 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"Proyecto_AWEBII/internal/routes"
-
-	"Proyecto_AWEBII/internal/handlers"
-	"Proyecto_AWEBII/internal/storage"
 )
 
 func main() {
@@ -20,16 +17,14 @@ func main() {
 		w.Write([]byte("API Asociación Estudiantil"))
 	})
 
-	// Memoria de inversiones
-	memoria := storage.NuevaMemoria()
-	memoria.SeedInversiones()
+	// Ruta de prueba
+	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Servidor funcionando"))
+	})
 
-	// Rutas
+	// Rutas de estudiantes
+	routes.EstudianteRoutes(r)
 	routes.EventoRoutes(r)
-	routes.InversionRoutes(
-		r,
-		handlers.NewInversionHandler(memoria),
-	)
 
 	log.Println("Servidor ejecutándose en puerto 8080")
 
