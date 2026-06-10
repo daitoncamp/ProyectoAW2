@@ -1,6 +1,5 @@
+// registrar rutas
 package routes
-
-//registrar rutas
 
 import (
 	"Proyecto_AWEBII/internal/handlers"
@@ -8,10 +7,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func EventoRoutes(r chi.Router) {
-	r.Get("/events", handlers.ObtenerEventos)
-	r.Post("/events", handlers.CrearEvento)
-	r.Get("/events/{id}", handlers.ObtenerEvento)
-	r.Put("/events/{id}", handlers.ActualizarEvento)
-	r.Delete("/events/{id}", handlers.EliminarEvento)
+func EventoRoutes(r chi.Router, h *handlers.EventoHandler) {
+
+	r.Route("/api/v1/events", func(r chi.Router) {
+		r.Get("/", h.ObtenerEventos)
+		r.Post("/", h.CrearEvento)
+		r.Get("/{id}", h.ObtenerEventoPorID)
+		r.Put("/{id}", h.ActualizarEvento)
+		r.Delete("/{id}", h.EliminarEvento)
+	})
 }
