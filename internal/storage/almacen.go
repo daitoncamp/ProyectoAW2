@@ -9,4 +9,14 @@ type Almacen interface {
 	CrearInversion(i models.Inversion) models.Inversion
 	ActualizarInversion(id int, datos models.Inversion) (models.Inversion, bool)
 	BorrarInversion(id int) bool
+
+	// EVENTOS
+
+	ListarEventos() []models.Evento
+	BuscarEventoPorID(id int) (models.Evento, bool)
+	CrearEvento(e models.Evento) models.Evento
+	ActualizarEvento(id int, datos models.Evento) (models.Evento, bool)
+	BorrarEvento(id int) bool
 }
+
+// var _ Almacen = (*Memoria)(nil)
