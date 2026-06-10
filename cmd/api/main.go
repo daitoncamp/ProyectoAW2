@@ -20,12 +20,16 @@ func main() {
 		w.Write([]byte("API Asociación Estudiantil"))
 	})
 
-	// Memoria de inversiones
+	// Memoria
 	memoria := storage.NuevaMemoria()
 	memoria.SeedInversiones()
+	memoria.SeedEventos()
 
 	// Rutas
-	routes.EventoRoutes(r)
+	routes.EventoRoutes(
+		r,
+		handlers.NewEventoHandler(memoria),
+	)
 	routes.InversionRoutes(
 		r,
 		handlers.NewInversionHandler(memoria),

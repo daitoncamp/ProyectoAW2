@@ -1,96 +1,99 @@
 package handlers
 
-//endpoints
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"Proyecto_AWEBII/internal/models"
-	"Proyecto_AWEBII/internal/services"
-	"fmt"
-	"strconv"
+	"Proyecto_AWEBII/internal/storage"
 
 	"github.com/go-chi/chi/v5"
 )
 
-func ObtenerEventos(w http.ResponseWriter, r *http.Request) {
+type EventoHandler struct {
+	store storage.Almacen
+}
+
+func NewEventoHandler(store storage.Almacen) *EventoHandler {
+	return &EventoHandler{store: store}
+}
+
+// LISTAR EVENTOS
+func (h *EventoHandler) ObtenerEventos(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	eventos := services.ObtenerEventos()
-
-	json.NewEncoder(w).Encode(eventos)
+	json.NewEncoder(w).Encode(h.store.ListarEventos())
 }
 
-// ObtenerEventos()
-// ObtenerEvento()
-// ActualizarEvento()
-// EliminarEvento()
-func CrearEvento(w http.ResponseWriter, r *http.Request) {
+// CREAR EVENTO
+func (h *EventoHandler) CrearEvento(w http.ResponseWriter, r *http.Request) {
+	var e models.Evento
 
-	var evento models.Evento
-
-	err := json.NewDecoder(r.Body).Decode(&evento)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	fmt.Printf("%+v\n", evento)
-
-	services.CrearEvento(evento)
-
-	w.WriteHeader(http.StatusCreated)
-
-	json.NewEncoder(w).Encode(evento)
-}
-func ObtenerEvento(w http.ResponseWriter, r *http.Request) {
-
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-
-	evento, err := services.ObtenerEventoPorID(id)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(evento)
-}
-
-func ActualizarEvento(w http.ResponseWriter, r *http.Request) {
-
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-
-	var evento models.Evento
-
-	err := json.NewDecoder(r.Body).Decode(&evento)
-
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
 		http.Error(w, "JSON inválido", http.StatusBadRequest)
 		return
 	}
 
-	err = services.ActualizarEvento(id, evento)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(evento)
+	creado := h.store.CrearEvento(e)
+	json.NewEncoder(w).Encode(creado)
 }
 
-func EliminarEvento(w http.ResponseWriter, r *http.Request) {
-
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-
-	err := services.EliminarEvento(id)
-
+// OBTENER POR ID
+func (h *EventoHandler) ObtenerEventoPorID(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, "ID inválido", http.StatusBadRequest)
 		return
 	}
 
-	w.Write([]byte("Evento eliminado"))
+	ev, ok := h.store.BuscarEventoPorID(id)
+	if !ok {
+		http.Error(w, "evento no encontrado", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(ev)
+}
+
+// ACTUALIZAR EVENTO
+func (h *EventoHandler) ActualizarEvento(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
+
+	var e models.Evento
+	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	actualizado, ok := h.store.ActualizarEvento(id, e)
+	if !ok {
+		http.Error(w, "evento no encontrado", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(actualizado)
+}
+
+// ELIMINAR EVENTO
+func (h *EventoHandler) EliminarEvento(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
+
+	ok := h.store.BorrarEvento(id)
+	if !ok {
+		http.Error(w, "evento no encontrado", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
