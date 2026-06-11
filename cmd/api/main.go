@@ -6,9 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"Proyecto_AWEBII/internal/routes"
-
 	"Proyecto_AWEBII/internal/handlers"
+	"Proyecto_AWEBII/internal/routes"
 	"Proyecto_AWEBII/internal/storage"
 )
 
@@ -25,15 +24,24 @@ func main() {
 	memoria.SeedInversiones()
 	memoria.SeedEventos()
 
-	// Rutas
+	// Ruta de prueba (opcional de equipo)
+	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Servidor funcionando"))
+	})
+
+	// Rutas del sistema
 	routes.EventoRoutes(
 		r,
 		handlers.NewEventoHandler(memoria),
 	)
+
 	routes.InversionRoutes(
 		r,
 		handlers.NewInversionHandler(memoria),
 	)
+
+	// Rutas de estudiantes (compañero)
+	routes.EstudianteRoutes(r)
 
 	log.Println("Servidor ejecutándose en puerto 8080")
 
