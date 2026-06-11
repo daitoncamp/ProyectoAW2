@@ -40,7 +40,7 @@ func main() {
 		handlers.NewInversionHandler(memoria),
 	)
 
-	// Rutas de estudiantes (compañero)
+	// Rutas de estudiantes
 	routes.EstudianteRoutes(r)
 
 	log.Println("Servidor ejecutándose en puerto 8080")

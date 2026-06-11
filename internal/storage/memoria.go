@@ -32,13 +32,9 @@ func (m *Memoria) SeedInversiones() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.inversiones = []models.Inversion{
-		{ID: 1, Nombre: "Juan Pérez", MontoInicial: 1000, MontoActual: 1100, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
-		{ID: 2, Nombre: "María Gómez", MontoInicial: 500, MontoActual: 550, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
-		{ID: 3, Nombre: "Carlos Rodríguez", MontoInicial: 2000, MontoActual: 2200, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
-		{ID: 4, Nombre: "Ana Martínez", MontoInicial: 1500, MontoActual: 1650, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
-		{ID: 5, Nombre: "Luis Fernández", MontoInicial: 800, MontoActual: 880, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
-		{ID: 6, Nombre: "Sofía López", MontoInicial: 1200, MontoActual: 1320, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
-		{ID: 7, Nombre: "Miguel Sánchez", MontoInicial: 700, MontoActual: 770, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
+		{ID: 1, Nombre: "Remodelación de Biblioteca", MontoInicial: 1000, MontoActual: 1100, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
+		{ID: 2, Nombre: "Actualización de Equipos", MontoInicial: 500, MontoActual: 550, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
+		{ID: 3, Nombre: "Proyecto de Investigación", MontoInicial: 2000, MontoActual: 2200, RendimientoEsperado: 10, Estado: "activa", TipoInversionID: 1, DestinoInversionID: 1},
 	}
 	m.nextID = 8
 }
