@@ -1,8 +1,9 @@
 package models
 
 type Evento struct {
-	ID          int    `json:"id"`
-	Nombre      string `json:"nombre"`
+	ID int `gorm:"primaryKey;autoIncrement" json:"id"`
+
+	Nombre      string `gorm:"not null" json:"nombre"`
 	Descripcion string `json:"descripcion"`
 	Fecha       string `json:"fecha"`
 	Lugar       string `json:"lugar"`
