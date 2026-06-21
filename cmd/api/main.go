@@ -1,43 +1,64 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-
 	"Proyecto_AWEBII/internal/handlers"
-	"Proyecto_AWEBII/internal/service"
+	"Proyecto_AWEBII/internal/models"
+	"Proyecto_AWEBII/internal/services"
 	"Proyecto_AWEBII/internal/storage"
+
+	"github.com/glebarez/sqlite"
+	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
+	"gorm.io/gorm"
 )
 
 func main() {
+	gdb, err := gorm.Open(sqlite.Open("asociacion.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatal("no se pudo abrir la base de datos: ", err)
+	}
 
-	repo := storage.NewMemoria()
+	if err := gdb.AutoMigrate(
+		&models.Evento{},
+		&models.CategoriaEvento{},
+		&models.Asistencia{},
+		&models.Usuario{},
+	); err != nil {
+		log.Fatal("falló AutoMigrate: ", err)
+	}
 
-	eventoService := service.NewEventoService(repo)
-	inversionService := service.NewInversionService(repo)
+	almacen := storage.NuevoAlmacenSQLite(gdb)
 
+	eventoService := services.NewEventoService(almacen)
 	eventoHandler := handlers.NewEventoHandler(eventoService)
-	inversionHandler := handlers.NewInversionHandler(inversionService)
 
 	r := chi.NewRouter()
 
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Use(chimw.Logger)
+	r.Use(chimw.Recoverer)
 
-		// EVENTOS
-		r.Get("/eventos", eventoHandler.ListarEventos)
-		r.Get("/eventos/{id}", eventoHandler.ObtenerEvento)
-		r.Post("/eventos", eventoHandler.CrearEvento)
-		r.Put("/eventos/{id}", eventoHandler.ActualizarEvento)
-		r.Delete("/eventos/{id}", eventoHandler.EliminarEvento)
-
-		// INVERSIONES
-		r.Get("/inversiones", inversionHandler.ListarInversiones)
-		r.Get("/inversiones/{id}", inversionHandler.ObtenerInversion)
-		r.Post("/inversiones", inversionHandler.CrearInversion)
-		r.Put("/inversiones/{id}", inversionHandler.ActualizarInversion)
-		r.Delete("/inversiones/{id}", inversionHandler.EliminarInversion)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("API Asociación Estudiantil funcionando correctamente"))
 	})
 
-	http.ListenAndServe(":8080", r)
+	log.Println("Backend de almacenamiento: GORM")
+
+	r.Route("/api/v1/eventos", func(r chi.Router) {
+		r.Get("/", eventoHandler.ListarEventos)
+		r.Post("/", eventoHandler.CrearEvento)
+		r.Get("/{id}", eventoHandler.ObtenerEvento)
+		r.Put("/{id}", eventoHandler.ActualizarEvento)
+		r.Delete("/{id}", eventoHandler.EliminarEvento)
+	})
+
+	const addr = ":8080"
+
+	log.Printf("API escuchando en http://localhost%s", addr)
+
+	if err := http.ListenAndServe(addr, r); err != nil {
+		log.Fatal(err)
+	}
 }
