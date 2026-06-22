@@ -31,5 +31,5 @@ type Aporte struct {
 	ID          int     `gorm:"primaryKey" json:"id"`
 	InversionID int     `json:"inversion_id"`
 	Nombre      string  `gorm:"not null" json:"nombre"`
-	Monto       float64 `gorm:"not null" json:"monto"`
+	Monto       float64 `gorm:"not null" json:"mont"`
 }
