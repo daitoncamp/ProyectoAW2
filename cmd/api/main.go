@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"Proyecto_AWEBII/internal/handlers"
+	"Proyecto_AWEBII/internal/middleware"
 	"Proyecto_AWEBII/internal/routes"
 	"Proyecto_AWEBII/internal/storage"
 )
@@ -14,6 +15,8 @@ import (
 func main() {
 
 	r := chi.NewRouter()
+
+	r.Use(middleware.Cors)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API Asociación Estudiantil"))
