@@ -1,4 +1,3 @@
-// registrar rutas
 package routes
 
 import (
@@ -8,12 +7,13 @@ import (
 )
 
 func EventoRoutes(r chi.Router, h *handlers.EventoHandler) {
+	r.Route("/api/v1/eventos", func(r chi.Router) {
 
-	r.Route("/api/v1/events", func(r chi.Router) {
-		r.Get("/", h.ObtenerEventos)
+		r.Get("/", h.ListarEventos)
 		r.Post("/", h.CrearEvento)
-		r.Get("/{id}", h.ObtenerEventoPorID)
+		r.Get("/{id}", h.ObtenerEvento)
 		r.Put("/{id}", h.ActualizarEvento)
 		r.Delete("/{id}", h.EliminarEvento)
+
 	})
 }
