@@ -19,4 +19,4 @@ type Almacen interface {
 	BorrarEvento(id int) bool
 }
 
-// var _ Almacen = (*Memoria)(nil)
+//var _ Almacen = (*Memoria)(nil)
