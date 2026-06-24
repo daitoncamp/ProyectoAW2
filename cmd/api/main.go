@@ -1,52 +1,43 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"Proyecto_AWEBII/internal/handlers"
-	"Proyecto_AWEBII/internal/routes"
+	"Proyecto_AWEBII/internal/service"
 	"Proyecto_AWEBII/internal/storage"
 )
 
 func main() {
 
+	repo := storage.NewMemoria()
+
+	eventoService := service.NewEventoService(repo)
+	inversionService := service.NewInversionService(repo)
+
+	eventoHandler := handlers.NewEventoHandler(eventoService)
+	inversionHandler := handlers.NewInversionHandler(inversionService)
+
 	r := chi.NewRouter()
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("API Asociación Estudiantil"))
+	r.Route("/api/v1", func(r chi.Router) {
+
+		// EVENTOS
+		r.Get("/eventos", eventoHandler.ListarEventos)
+		r.Get("/eventos/{id}", eventoHandler.ObtenerEvento)
+		r.Post("/eventos", eventoHandler.CrearEvento)
+		r.Put("/eventos/{id}", eventoHandler.ActualizarEvento)
+		r.Delete("/eventos/{id}", eventoHandler.EliminarEvento)
+
+		// INVERSIONES
+		r.Get("/inversiones", inversionHandler.ListarInversiones)
+		r.Get("/inversiones/{id}", inversionHandler.ObtenerInversion)
+		r.Post("/inversiones", inversionHandler.CrearInversion)
+		r.Put("/inversiones/{id}", inversionHandler.ActualizarInversion)
+		r.Delete("/inversiones/{id}", inversionHandler.EliminarInversion)
 	})
 
-	// Memoria
-	memoria := storage.NuevaMemoria()
-	memoria.SeedInversiones()
-	memoria.SeedEventos()
-
-	// Ruta de prueba (opcional de equipo)
-	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Servidor funcionando"))
-	})
-
-	// Rutas del sistema
-	routes.EventoRoutes(
-		r,
-		handlers.NewEventoHandler(memoria),
-	)
-
-	routes.InversionRoutes(
-		r,
-		handlers.NewInversionHandler(memoria),
-	)
-
-	// Rutas de estudiantes
-	routes.EstudianteRoutes(r)
-
-	log.Println("Servidor ejecutándose en puerto 8080")
-
-	err := http.ListenAndServe(":8080", r)
-	if err != nil {
-		log.Fatal(err)
-	}
+	http.ListenAndServe(":8080", r)
 }
