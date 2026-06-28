@@ -4,48 +4,82 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
+	"gorm.io/gorm"
 
 	"Proyecto_AWEBII/internal/handlers"
+	"Proyecto_AWEBII/internal/middleware"
+	"Proyecto_AWEBII/internal/models"
 	"Proyecto_AWEBII/internal/routes"
 	"Proyecto_AWEBII/internal/storage"
 )
 
 func main() {
 
+	// ==========================================
+	// Conexión SQLite + GORM
+	// ==========================================
+
+	db, err := gorm.Open(sqlite.Open("asociacion.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Error al abrir SQLite:", err)
+	}
+
+	// Crear tablas automáticamente
+	err = db.AutoMigrate(
+		&models.Inversion{},
+		&models.TipoInversion{},
+		&models.DestinoInversion{},
+		&models.Aporte{},
+	)
+	if err != nil {
+		log.Fatal("Error en AutoMigrate:", err)
+	}
+
+	// ==========================================
+	// Almacenamiento SQLite
+	// ==========================================
+
+	almacen := storage.NuevoAlmacenSQLite(db)
+
+	// Opcional: insertar datos semilla
+	almacen.SembrarSiVacio()
+
+	// ==========================================
+	// Router
+	// ==========================================
+
 	r := chi.NewRouter()
+
+	r.Use(middleware.Cors)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API Asociación Estudiantil"))
 	})
 
-	// Memoria
-	memoria := storage.NuevaMemoria()
-	memoria.SeedInversiones()
-	memoria.SeedEventos()
-
-	// Ruta de prueba (opcional de equipo)
 	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Servidor funcionando"))
 	})
 
-	// Rutas del sistema
-	routes.EventoRoutes(
-		r,
-		handlers.NewEventoHandler(memoria),
-	)
+	// ==========================================
+	// Rutas
+	// ==========================================
 
 	routes.InversionRoutes(
 		r,
-		handlers.NewInversionHandler(memoria),
+		handlers.NewInversionHandler(almacen),
 	)
 
-	// Rutas de estudiantes
-	routes.EstudianteRoutes(r)
+	// Eventos queda pendiente de tu compañero
+	// routes.EventoRoutes(...)
+
+	// Estudiantes
+	//routes.EstudianteRoutes(r)
 
 	log.Println("Servidor ejecutándose en puerto 8080")
 
-	err := http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Fatal(err)
 	}
