@@ -4,61 +4,83 @@ import (
 	"log"
 	"net/http"
 
-	"Proyecto_AWEBII/internal/handlers"
-	"Proyecto_AWEBII/internal/models"
-	"Proyecto_AWEBII/internal/services"
-	"Proyecto_AWEBII/internal/storage"
-
 	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
-	chimw "github.com/go-chi/chi/v5/middleware"
 	"gorm.io/gorm"
+
+	"Proyecto_AWEBII/internal/handlers"
+	"Proyecto_AWEBII/internal/middleware"
+	"Proyecto_AWEBII/internal/models"
+	"Proyecto_AWEBII/internal/routes"
+	"Proyecto_AWEBII/internal/services"
+
+	//"Proyecto_AWEBII/internal/services"//
+	"Proyecto_AWEBII/internal/storage"
 )
 
 func main() {
-	gdb, err := gorm.Open(sqlite.Open("asociacion.db"), &gorm.Config{})
+
+	// Conexión SQLite + GORM
+
+	db, err := gorm.Open(sqlite.Open("asociacion.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal("no se pudo abrir la base de datos: ", err)
+		log.Fatal("Error al abrir SQLite:", err)
 	}
 
-	if err := gdb.AutoMigrate(
+	// AutoMigrate
+
+	err = db.AutoMigrate(
+		&models.Inversion{},
+		&models.TipoInversion{},
+		&models.DestinoInversion{},
+		&models.Aporte{},
+
 		&models.Evento{},
 		&models.CategoriaEvento{},
 		&models.Asistencia{},
 		&models.Usuario{},
-	); err != nil {
-		log.Fatal("falló AutoMigrate: ", err)
+	)
+	if err != nil {
+		log.Fatal("Error en AutoMigrate:", err)
 	}
 
-	almacen := storage.NuevoAlmacenSQLite(gdb)
+	// Almacenamiento SQLite
+
+	almacen := storage.NuevoAlmacenSQLite(db)
+
+	// Opcional: insertar datos semilla
+	almacen.SembrarSiVacio()
+
+	// SErvicio y el  handler eventos
 
 	eventoService := services.NewEventoService(almacen)
 	eventoHandler := handlers.NewEventoHandler(eventoService)
 
+	// Router
+
 	r := chi.NewRouter()
 
-	r.Use(chimw.Logger)
-	r.Use(chimw.Recoverer)
+	r.Use(middleware.Cors)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("API Asociación Estudiantil funcionando correctamente"))
+		w.Write([]byte("API Asociación Estudiantil"))
 	})
 
-	log.Println("Backend de almacenamiento: GORM")
-
-	r.Route("/api/v1/eventos", func(r chi.Router) {
-		r.Get("/", eventoHandler.ListarEventos)
-		r.Post("/", eventoHandler.CrearEvento)
-		r.Get("/{id}", eventoHandler.ObtenerEvento)
-		r.Put("/{id}", eventoHandler.ActualizarEvento)
-		r.Delete("/{id}", eventoHandler.EliminarEvento)
+	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Servidor funcionando"))
 	})
 
-	const addr = ":8080"
+	routes.InversionRoutes(
+		r,
+		handlers.NewInversionHandler(almacen),
+	)
 
-	log.Printf("API escuchando en http://localhost%s", addr)
+	routes.EventoRoutes(r, eventoHandler)
 
-	if err := http.ListenAndServe(addr, r); err != nil {
+	log.Println("Servidor ejecutándose en puerto 8080")
+
+	err = http.ListenAndServe(":8080", r)
+	if err != nil {
 		log.Fatal(err)
 	}
 }

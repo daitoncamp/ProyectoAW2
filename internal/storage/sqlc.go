@@ -8,57 +8,146 @@ import (
 	"Proyecto_AWEBII/internal/storage/sqlcdb"
 )
 
-// AlmacenSQLC implementa la interfaz Almacen usando SQLC.
+// AlmacenSQLC implementa la interfaz Almacen usando sqlc.
 type AlmacenSQLC struct {
 	q *sqlcdb.Queries
 }
 
-// Constructor
+// NuevoAlmacenSQLC envuelve una conexión *sql.DB ya abierta.
 func NuevoAlmacenSQLC(db *sql.DB) *AlmacenSQLC {
 	return &AlmacenSQLC{
 		q: sqlcdb.New(db),
 	}
 }
 
-// =========================
-// HELPERS (IMPORTANTE)
-// =========================
+// =========================================================
+// MAPEO sqlc <-> dominio
+// =========================================================
 
-func ns(s sql.NullString) string {
-	if s.Valid {
-		return s.String
+func aInversionDominio(i sqlcdb.Inversion) models.Inversion {
+	return models.Inversion{
+		ID:                  int(i.ID),
+		Nombre:              i.Nombre,
+		MontoInicial:        i.MontoInicial,
+		MontoActual:         i.MontoActual,
+		RendimientoEsperado: i.RendimientoEsperado,
+		Estado:              i.Estado,
+		TipoInversionID:     int(i.TipoInversionID),
+		DestinoInversionID:  int(i.DestinoInversionID),
 	}
-	return ""
 }
 
-func ni(i sql.NullInt64) int {
-	if i.Valid {
-		return int(i.Int64)
+// =========================================================
+// INVERSIONES
+// =========================================================
+
+func (a *AlmacenSQLC) ListarInversiones() []models.Inversion {
+
+	filas, err := a.q.ListarInversiones(context.Background())
+	if err != nil {
+		return nil
 	}
-	return 0
+
+	out := make([]models.Inversion, 0, len(filas))
+
+	for _, f := range filas {
+		out = append(out, aInversionDominio(f))
+	}
+
+	return out
 }
 
-// =========================
-// MAPEOS
-// =========================
+func (a *AlmacenSQLC) BuscarInversionPorID(id int) (models.Inversion, bool) {
+
+	fila, err := a.q.BuscarInversionPorID(
+		context.Background(),
+		int64(id),
+	)
+
+	if err != nil {
+		return models.Inversion{}, false
+	}
+
+	return aInversionDominio(fila), true
+}
+
+func (a *AlmacenSQLC) CrearInversion(
+	i models.Inversion,
+) models.Inversion {
+
+	fila, err := a.q.CrearInversion(
+		context.Background(),
+		sqlcdb.CrearInversionParams{
+			Nombre:              i.Nombre,
+			MontoInicial:        i.MontoInicial,
+			MontoActual:         i.MontoActual,
+			RendimientoEsperado: i.RendimientoEsperado,
+			Estado:              i.Estado,
+			TipoInversionID:     int64(i.TipoInversionID),
+			DestinoInversionID:  int64(i.DestinoInversionID),
+		},
+	)
+
+	if err != nil {
+		return models.Inversion{}
+	}
+
+	return aInversionDominio(fila)
+}
+
+func (a *AlmacenSQLC) ActualizarInversion(
+	id int,
+	datos models.Inversion,
+) (models.Inversion, bool) {
+
+	fila, err := a.q.ActualizarInversion(
+		context.Background(),
+		sqlcdb.ActualizarInversionParams{
+			Nombre:              datos.Nombre,
+			MontoInicial:        datos.MontoInicial,
+			MontoActual:         datos.MontoActual,
+			RendimientoEsperado: datos.RendimientoEsperado,
+			Estado:              datos.Estado,
+			TipoInversionID:     int64(datos.TipoInversionID),
+			DestinoInversionID:  int64(datos.DestinoInversionID),
+			ID:                  int64(id),
+		},
+	)
+
+	if err != nil {
+		return models.Inversion{}, false
+	}
+
+	return aInversionDominio(fila), true
+}
+
+func (a *AlmacenSQLC) BorrarInversion(id int) bool {
+
+	filas, err := a.q.BorrarInversion(
+		context.Background(),
+		int64(id),
+	)
+
+	if err != nil {
+		return false
+	}
+
+	return filas > 0
+}
 
 func aEventoDominio(e sqlcdb.Evento) models.Evento {
 	return models.Evento{
 		ID:          int(e.ID),
 		Nombre:      e.Nombre,
-		Descripcion: ns(e.Descripcion),
-		Fecha:       ns(e.Fecha),
-		Lugar:       ns(e.Lugar),
-		Capacidad:   ni(e.Capacidad),
-		CategoriaID: ni(e.CategoriaID),
-		Organizador: ns(e.Organizador),
-		Estado:      ns(e.Estado),
+		Descripcion: e.Descripcion,
+		Fecha:       e.Fecha,
+		Lugar:       e.Lugar,
+		Capacidad:   int(e.Capacidad),
+		CategoriaID: int(e.CategoriaID),
+		Organizador: e.Organizador,
+		Estado:      e.Estado,
 	}
 }
-
-// =========================
-// EVENTOS
-// =========================
 
 func (a *AlmacenSQLC) ListarEventos() []models.Evento {
 	filas, err := a.q.ListarEventos(context.Background())
@@ -83,17 +172,18 @@ func (a *AlmacenSQLC) BuscarEventoPorID(id int) (models.Evento, bool) {
 }
 
 func (a *AlmacenSQLC) CrearEvento(e models.Evento) models.Evento {
+
 	fila, err := a.q.CrearEvento(
 		context.Background(),
 		sqlcdb.CrearEventoParams{
 			Nombre:      e.Nombre,
-			Descripcion: sql.NullString{String: e.Descripcion, Valid: e.Descripcion != ""},
-			Fecha:       sql.NullString{String: e.Fecha, Valid: e.Fecha != ""},
-			Lugar:       sql.NullString{String: e.Lugar, Valid: e.Lugar != ""},
-			Capacidad:   sql.NullInt64{Int64: int64(e.Capacidad), Valid: true},
-			CategoriaID: sql.NullInt64{Int64: int64(e.CategoriaID), Valid: true},
-			Organizador: sql.NullString{String: e.Organizador, Valid: e.Organizador != ""},
-			Estado:      sql.NullString{String: e.Estado, Valid: e.Estado != ""},
+			Descripcion: e.Descripcion,
+			Fecha:       e.Fecha,
+			Lugar:       e.Lugar,
+			Capacidad:   int64(e.Capacidad),
+			CategoriaID: int64(e.CategoriaID),
+			Organizador: e.Organizador,
+			Estado:      e.Estado,
 		},
 	)
 
@@ -105,18 +195,19 @@ func (a *AlmacenSQLC) CrearEvento(e models.Evento) models.Evento {
 }
 
 func (a *AlmacenSQLC) ActualizarEvento(id int, datos models.Evento) (models.Evento, bool) {
+
 	fila, err := a.q.ActualizarEvento(
 		context.Background(),
 		sqlcdb.ActualizarEventoParams{
 			ID:          int64(id),
 			Nombre:      datos.Nombre,
-			Descripcion: sql.NullString{String: datos.Descripcion, Valid: datos.Descripcion != ""},
-			Fecha:       sql.NullString{String: datos.Fecha, Valid: datos.Fecha != ""},
-			Lugar:       sql.NullString{String: datos.Lugar, Valid: datos.Lugar != ""},
-			Capacidad:   sql.NullInt64{Int64: int64(datos.Capacidad), Valid: true},
-			CategoriaID: sql.NullInt64{Int64: int64(datos.CategoriaID), Valid: true},
-			Organizador: sql.NullString{String: datos.Organizador, Valid: datos.Organizador != ""},
-			Estado:      sql.NullString{String: datos.Estado, Valid: datos.Estado != ""},
+			Descripcion: datos.Descripcion,
+			Fecha:       datos.Fecha,
+			Lugar:       datos.Lugar,
+			Capacidad:   int64(datos.Capacidad),
+			CategoriaID: int64(datos.CategoriaID),
+			Organizador: datos.Organizador,
+			Estado:      datos.Estado,
 		},
 	)
 
@@ -134,3 +225,6 @@ func (a *AlmacenSQLC) BorrarEvento(id int) bool {
 	}
 	return res > 0
 }
+
+// Verificación en tiempo de compilación.
+//var _ Almacen = (*AlmacenSQLC)(nil)
