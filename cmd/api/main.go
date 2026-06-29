@@ -12,43 +12,60 @@ import (
 	"Proyecto_AWEBII/internal/middleware"
 	"Proyecto_AWEBII/internal/models"
 	"Proyecto_AWEBII/internal/routes"
+	"Proyecto_AWEBII/internal/services"
 	"Proyecto_AWEBII/internal/storage"
 )
 
 func main() {
 
-	// ==========================================
+	// =====================================================
 	// Conexión SQLite + GORM
-	// ==========================================
+	// =====================================================
 
 	db, err := gorm.Open(sqlite.Open("asociacion.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Error al abrir SQLite:", err)
+		log.Fatal("Error al abrir SQLite: ", err)
 	}
 
+	// =====================================================
 	// Crear tablas automáticamente
+	// =====================================================
+
 	err = db.AutoMigrate(
 		&models.Inversion{},
 		&models.TipoInversion{},
 		&models.DestinoInversion{},
 		&models.Aporte{},
+		&models.Usuario{},
 	)
 	if err != nil {
-		log.Fatal("Error en AutoMigrate:", err)
+		log.Fatal("Error en AutoMigrate: ", err)
 	}
 
-	// ==========================================
-	// Almacenamiento SQLite
-	// ==========================================
+	// =====================================================
+	// Almacén SQLite
+	// =====================================================
 
 	almacen := storage.NuevoAlmacenSQLite(db)
-
-	// Opcional: insertar datos semilla
 	almacen.SembrarSiVacio()
 
-	// ==========================================
+	// =====================================================
+	// Repositorio de usuarios + Servicio de autenticación
+	// =====================================================
+
+	usuarioRepo := storage.NewUsuarioRepository(db)
+	authService := services.NuevoAuthService(usuarioRepo)
+
+	// =====================================================
+	// Handlers
+	// =====================================================
+
+	authHandler := handlers.NewAuthHandler(authService)
+	inversionHandler := handlers.NewInversionHandler(almacen)
+
+	// =====================================================
 	// Router
-	// ==========================================
+	// =====================================================
 
 	r := chi.NewRouter()
 
@@ -62,20 +79,41 @@ func main() {
 		w.Write([]byte("Servidor funcionando"))
 	})
 
-	// ==========================================
-	// Rutas
-	// ==========================================
+	// =====================================================
+	// Rutas públicas
+	// =====================================================
 
-	routes.InversionRoutes(
+	routes.AuthRoutes(
 		r,
-		handlers.NewInversionHandler(almacen),
+		authHandler,
 	)
 
-	// Eventos queda pendiente de tu compañero
-	// routes.EventoRoutes(...)
+	// =====================================================
+	// Rutas protegidas
+	// =====================================================
 
-	// Estudiantes
-	//routes.EstudianteRoutes(r)
+	r.Group(func(r chi.Router) {
+
+		r.Use(middleware.Auth(authService))
+
+		routes.InversionRoutes(
+			r,
+			inversionHandler,
+		)
+
+		// Cuando tu compañero termine:
+		// routes.EventoRoutes(
+		//     r,
+		//     handlers.NewEventoHandler(...)
+		// )
+
+		// routes.EstudianteRoutes(r)
+
+	})
+
+	// =====================================================
+	// Servidor
+	// =====================================================
 
 	log.Println("Servidor ejecutándose en puerto 8080")
 
