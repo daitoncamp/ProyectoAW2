@@ -19,4 +19,9 @@ type Almacen interface {
 	BorrarEvento(id int) bool
 }
 
-// var _ Almacen = (*Memoria)(nil)
+type UserRepository interface {
+	CrearUsuario(u models.Usuario) (models.Usuario, error)
+	BuscarUsuarioPorEmail(email string) (models.Usuario, bool)
+}
+
+//var _ Almacen = (*Memoria)(nil)
