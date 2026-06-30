@@ -56,12 +56,15 @@ func main() {
 	usuarioRepo := storage.NewUsuarioRepository(db)
 	authService := services.NuevoAuthService(usuarioRepo)
 
+	// Servicios
+	inversionService := services.NewInversionService(almacen)
+
 	// =====================================================
 	// Handlers
 	// =====================================================
 
 	authHandler := handlers.NewAuthHandler(authService)
-	inversionHandler := handlers.NewInversionHandler(almacen)
+	inversionHandler := handlers.NewInversionHandler(inversionService)
 
 	// =====================================================
 	// Router
