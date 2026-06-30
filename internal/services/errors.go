@@ -20,3 +20,10 @@ var (
 	ErrEstadoVacio   = errors.New("el estado es obligatorio")
 	ErrNoEncontrado  = errors.New("inversión no encontrada")
 )
+
+// Eventos
+
+var (
+	ErrEventoNombreVacio  = errors.New("el nombre del evento es obligatorio")
+	ErrEventoNoEncontrado = errors.New("evento no encontrado")
+)
