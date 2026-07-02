@@ -4,27 +4,53 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/glebarez/sqlite"
-	"github.com/go-chi/chi/v5"
-	"gorm.io/gorm"
-
+	"Proyecto_AWEBII/internal/config"
 	"Proyecto_AWEBII/internal/handlers"
 	"Proyecto_AWEBII/internal/middleware"
 	"Proyecto_AWEBII/internal/models"
 	"Proyecto_AWEBII/internal/routes"
 	"Proyecto_AWEBII/internal/services"
 	"Proyecto_AWEBII/internal/storage"
+
+	"github.com/glebarez/sqlite"
+	"github.com/go-chi/chi/v5"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
 
 	// =====================================================
-	// Conexión SQLite + GORM
+	// Cargar configuración
 	// =====================================================
 
-	db, err := gorm.Open(sqlite.Open("asociacion.db"), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Error al abrir SQLite: ", err)
+	cfg := config.Cargar()
+
+	// =====================================================
+	// Conexión a la Base de Datos
+	// =====================================================
+
+	var (
+		db  *gorm.DB
+		err error
+	)
+
+	switch cfg.DBDriver {
+
+	case "postgres":
+
+		db, err = gorm.Open(postgres.Open(cfg.DBDsn), &gorm.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	default:
+
+		db, err = gorm.Open(sqlite.Open(cfg.RutaDB), &gorm.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
+
 	}
 
 	// =====================================================
@@ -38,12 +64,13 @@ func main() {
 		&models.Aporte{},
 		&models.Usuario{},
 	)
+
 	if err != nil {
 		log.Fatal("Error en AutoMigrate: ", err)
 	}
 
 	// =====================================================
-	// Almacén SQLite
+	// Almacén SQLite/PostgreSQL
 	// =====================================================
 
 	almacen := storage.NuevoAlmacenSQLite(db)
@@ -56,7 +83,10 @@ func main() {
 	usuarioRepo := storage.NewUsuarioRepository(db)
 	authService := services.NuevoAuthService(usuarioRepo)
 
+	// =====================================================
 	// Servicios
+	// =====================================================
+
 	inversionService := services.NewInversionService(almacen)
 
 	// =====================================================
@@ -104,13 +134,8 @@ func main() {
 			inversionHandler,
 		)
 
-		// Cuando tu compañero termine:
-		// routes.EventoRoutes(
-		//     r,
-		//     handlers.NewEventoHandler(...)
-		// )
-
-		// routes.EstudianteRoutes(r)
+		// routes.EventoRoutes(...)
+		// routes.EstudianteRoutes(...)
 
 	})
 
@@ -118,10 +143,12 @@ func main() {
 	// Servidor
 	// =====================================================
 
-	log.Println("Servidor ejecutándose en puerto 8080")
+	log.Println("Servidor ejecutándose en", cfg.Puerto)
 
-	err = http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(cfg.Puerto, r)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
