@@ -2,14 +2,21 @@ package services
 
 import (
 	"Proyecto_AWEBII/internal/models"
-	"Proyecto_AWEBII/internal/storage"
 )
 
-type EventoService struct {
-	repo storage.EventoRepository
+type EventoRepository interface {
+	ListarEventos() []models.Evento
+	BuscarEventoPorID(id int) (models.Evento, bool)
+	CrearEvento(evento models.Evento) models.Evento
+	ActualizarEvento(id int, evento models.Evento) (models.Evento, bool)
+	BorrarEvento(id int) bool
 }
 
-func NewEventoService(repo storage.EventoRepository) *EventoService {
+type EventoService struct {
+	repo EventoRepository
+}
+
+func NewEventoService(repo EventoRepository) *EventoService {
 	return &EventoService{repo: repo}
 }
 

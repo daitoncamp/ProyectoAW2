@@ -139,13 +139,13 @@ func aEventoDominio(e sqlcdb.Evento) models.Evento {
 	return models.Evento{
 		ID:          int(e.ID),
 		Nombre:      e.Nombre,
-		Descripcion: e.Descripcion,
-		Fecha:       e.Fecha,
-		Lugar:       e.Lugar,
-		Capacidad:   int(e.Capacidad),
-		CategoriaID: int(e.CategoriaID),
-		Organizador: e.Organizador,
-		Estado:      e.Estado,
+		Descripcion: e.Descripcion.String,
+		Fecha:       e.Fecha.String,
+		Lugar:       e.Lugar.String,
+		Capacidad:   int(e.Capacidad.Int64),
+		CategoriaID: int(e.CategoriaID.Int64),
+		Organizador: e.Organizador.String,
+		Estado:      e.Estado.String,
 	}
 }
 
@@ -176,14 +176,42 @@ func (a *AlmacenSQLC) CrearEvento(e models.Evento) models.Evento {
 	fila, err := a.q.CrearEvento(
 		context.Background(),
 		sqlcdb.CrearEventoParams{
-			Nombre:      e.Nombre,
-			Descripcion: e.Descripcion,
-			Fecha:       e.Fecha,
-			Lugar:       e.Lugar,
-			Capacidad:   int64(e.Capacidad),
-			CategoriaID: int64(e.CategoriaID),
-			Organizador: e.Organizador,
-			Estado:      e.Estado,
+			Nombre: e.Nombre,
+
+			Descripcion: sql.NullString{
+				String: e.Descripcion,
+				Valid:  true,
+			},
+
+			Fecha: sql.NullString{
+				String: e.Fecha,
+				Valid:  true,
+			},
+
+			Lugar: sql.NullString{
+				String: e.Lugar,
+				Valid:  true,
+			},
+
+			Capacidad: sql.NullInt64{
+				Int64: int64(e.Capacidad),
+				Valid: true,
+			},
+
+			CategoriaID: sql.NullInt64{
+				Int64: int64(e.CategoriaID),
+				Valid: true,
+			},
+
+			Organizador: sql.NullString{
+				String: e.Organizador,
+				Valid:  true,
+			},
+
+			Estado: sql.NullString{
+				String: e.Estado,
+				Valid:  true,
+			},
 		},
 	)
 
@@ -199,15 +227,43 @@ func (a *AlmacenSQLC) ActualizarEvento(id int, datos models.Evento) (models.Even
 	fila, err := a.q.ActualizarEvento(
 		context.Background(),
 		sqlcdb.ActualizarEventoParams{
-			ID:          int64(id),
-			Nombre:      datos.Nombre,
-			Descripcion: datos.Descripcion,
-			Fecha:       datos.Fecha,
-			Lugar:       datos.Lugar,
-			Capacidad:   int64(datos.Capacidad),
-			CategoriaID: int64(datos.CategoriaID),
-			Organizador: datos.Organizador,
-			Estado:      datos.Estado,
+			ID:     int64(id),
+			Nombre: datos.Nombre,
+
+			Descripcion: sql.NullString{
+				String: datos.Descripcion,
+				Valid:  true,
+			},
+
+			Fecha: sql.NullString{
+				String: datos.Fecha,
+				Valid:  true,
+			},
+
+			Lugar: sql.NullString{
+				String: datos.Lugar,
+				Valid:  true,
+			},
+
+			Capacidad: sql.NullInt64{
+				Int64: int64(datos.Capacidad),
+				Valid: true,
+			},
+
+			CategoriaID: sql.NullInt64{
+				Int64: int64(datos.CategoriaID),
+				Valid: true,
+			},
+
+			Organizador: sql.NullString{
+				String: datos.Organizador,
+				Valid:  true,
+			},
+
+			Estado: sql.NullString{
+				String: datos.Estado,
+				Valid:  true,
+			},
 		},
 	)
 
@@ -217,7 +273,6 @@ func (a *AlmacenSQLC) ActualizarEvento(id int, datos models.Evento) (models.Even
 
 	return aEventoDominio(fila), true
 }
-
 func (a *AlmacenSQLC) BorrarEvento(id int) bool {
 	res, err := a.q.BorrarEvento(context.Background(), int64(id))
 	if err != nil {

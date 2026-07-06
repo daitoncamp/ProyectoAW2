@@ -6,48 +6,39 @@ import (
 	"strconv"
 
 	"Proyecto_AWEBII/internal/models"
-	"Proyecto_AWEBII/internal/storage"
+	"Proyecto_AWEBII/internal/services"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type InversionHandler struct {
-	store storage.Almacen
+	service *services.InversionService
 }
 
-func NewInversionHandler(store storage.Almacen) *InversionHandler {
+func NewInversionHandler(service *services.InversionService) *InversionHandler {
 	return &InversionHandler{
-		store: store,
+		service: service,
 	}
 }
 
-// CrearInversion maneja la creación de una nueva inversión a través de una solicitud POST.
+// =====================================================
+// Crear inversión
+// =====================================================
+
 func (h *InversionHandler) CrearInversion(w http.ResponseWriter, r *http.Request) {
 
 	var inversion models.Inversion
 
-	err := json.NewDecoder(r.Body).Decode(&inversion)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&inversion); err != nil {
 		http.Error(w, "JSON inválido", http.StatusBadRequest)
 		return
 	}
 
-	if inversion.Nombre == "" {
-		http.Error(w, "El nombre es obligatorio", http.StatusBadRequest)
+	nueva, err := h.service.CrearInversion(inversion)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	if inversion.MontoInicial <= 0 {
-		http.Error(w, "El monto inicial debe ser mayor a 0", http.StatusBadRequest)
-		return
-	}
-
-	if inversion.Estado == "" {
-		http.Error(w, "El estado es obligatorio", http.StatusBadRequest)
-		return
-	}
-
-	nueva := h.store.CrearInversion(inversion)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -55,17 +46,22 @@ func (h *InversionHandler) CrearInversion(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(nueva)
 }
 
-// ListarInversiones maneja la solicitud GET para listar todas las inversiones.
+// =====================================================
+// Listar inversiones
+// =====================================================
+
 func (h *InversionHandler) ListarInversiones(w http.ResponseWriter, r *http.Request) {
 
-	inversiones := h.store.ListarInversiones()
+	inversiones := h.service.ListarInversiones()
 
 	w.Header().Set("Content-Type", "application/json")
-
 	json.NewEncoder(w).Encode(inversiones)
 }
 
-// BuscarInversionPorID maneja la solicitud GET para obtener una inversión específica por su ID.
+// =====================================================
+// Buscar inversión por ID
+// =====================================================
+
 func (h *InversionHandler) BuscarInversionPorID(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
@@ -76,19 +72,21 @@ func (h *InversionHandler) BuscarInversionPorID(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	inversion, encontrado := h.store.BuscarInversionPorID(id)
+	inversion, err := h.service.BuscarInversionPorID(id)
 
-	if !encontrado {
-		http.Error(w, "Inversión no encontrada", http.StatusNotFound)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
 	json.NewEncoder(w).Encode(inversion)
 }
 
-// ActualizarInversion maneja la solicitud PUT para actualizar una inversión existente por su ID.
+// =====================================================
+// Actualizar inversión
+// =====================================================
+
 func (h *InversionHandler) ActualizarInversion(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
@@ -101,26 +99,31 @@ func (h *InversionHandler) ActualizarInversion(w http.ResponseWriter, r *http.Re
 
 	var datos models.Inversion
 
-	err = json.NewDecoder(r.Body).Decode(&datos)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
 		http.Error(w, "JSON inválido", http.StatusBadRequest)
 		return
 	}
 
-	inversionActualizada, encontrado :=
-		h.store.ActualizarInversion(id, datos)
+	inversionActualizada, err := h.service.ActualizarInversion(id, datos)
 
-	if !encontrado {
-		http.Error(w, "Inversión no encontrada", http.StatusNotFound)
+	if err != nil {
+		if err == services.ErrNoEncontrado {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
 	json.NewEncoder(w).Encode(inversionActualizada)
 }
 
-// BorrarInversion maneja la solicitud DELETE para eliminar una inversión por su ID.
+// =====================================================
+// Eliminar inversión
+// =====================================================
+
 func (h *InversionHandler) BorrarInversion(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
@@ -131,10 +134,8 @@ func (h *InversionHandler) BorrarInversion(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	borrado := h.store.BorrarInversion(id)
-
-	if !borrado {
-		http.Error(w, "Inversión no encontrada", http.StatusNotFound)
+	if err := h.service.BorrarInversion(id); err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
