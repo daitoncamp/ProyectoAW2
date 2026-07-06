@@ -4,30 +4,49 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/glebarez/sqlite"
-	"github.com/go-chi/chi/v5"
-	"gorm.io/gorm"
-
+	"Proyecto_AWEBII/internal/config"
 	"Proyecto_AWEBII/internal/handlers"
 	"Proyecto_AWEBII/internal/middleware"
 	"Proyecto_AWEBII/internal/models"
 	"Proyecto_AWEBII/internal/routes"
 	"Proyecto_AWEBII/internal/services"
-
-	//"Proyecto_AWEBII/internal/services"//
 	"Proyecto_AWEBII/internal/storage"
+
+	"github.com/glebarez/sqlite"
+	"github.com/go-chi/chi/v5"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
+	// Cargar configuración
+	cfg := config.Cargar()
+	// Conexión a la Base de Datos
 
-	// Conexión SQLite + GORM
+	var (
+		db  *gorm.DB
+		err error
+	)
 
-	db, err := gorm.Open(sqlite.Open("asociacion.db"), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Error al abrir SQLite:", err)
+	switch cfg.DBDriver {
+
+	case "postgres":
+
+		db, err = gorm.Open(postgres.Open(cfg.DBDsn), &gorm.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	default:
+
+		db, err = gorm.Open(sqlite.Open(cfg.RutaDB), &gorm.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
+
 	}
 
-	// AutoMigrate
+	// Crear tablas automáticamente
 
 	err = db.AutoMigrate(
 		&models.Inversion{},
@@ -38,28 +57,36 @@ func main() {
 		&models.Evento{},
 		&models.CategoriaEvento{},
 		&models.Asistencia{},
+
 		&models.Usuario{},
 	)
+
 	if err != nil {
-		log.Fatal("Error en AutoMigrate:", err)
+		log.Fatal("Error en AutoMigrate: ", err)
 	}
 
-	// Almacenamiento SQLite
-
+	// Almacén SQLite/PostgreSQL
 	almacen := storage.NuevoAlmacenSQLite(db)
 
-	// Opcional: insertar datos semilla
 	almacen.SembrarSiVacio()
+	almacen.SembrarSiVacioEventos()
 
-	// SErvicio y el  handler eventos
+	// Repositorio de usuarios + Servicio de autenticación
+
+	usuarioRepo := storage.NewUsuarioRepository(db)
+	authService := services.NuevoAuthService(usuarioRepo)
+
+	// Servicios
+	inversionService := services.NewInversionService(almacen)
 
 	eventoService := services.NewEventoService(almacen)
+	// Handlers
+	authHandler := handlers.NewAuthHandler(authService)
+	inversionHandler := handlers.NewInversionHandler(inversionService)
 	eventoHandler := handlers.NewEventoHandler(eventoService)
 
 	// Router
-
 	r := chi.NewRouter()
-
 	r.Use(middleware.Cors)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -70,17 +97,39 @@ func main() {
 		w.Write([]byte("Servidor funcionando"))
 	})
 
-	routes.InversionRoutes(
+	// Rutas públicas
+	routes.AuthRoutes(
 		r,
-		handlers.NewInversionHandler(almacen),
+		authHandler,
 	)
 
-	routes.EventoRoutes(r, eventoHandler)
+	// Rutas protegidas
+	r.Group(func(r chi.Router) {
 
-	log.Println("Servidor ejecutándose en puerto 8080")
+		r.Use(middleware.Auth(authService))
 
-	err = http.ListenAndServe(":8080", r)
+		routes.InversionRoutes(
+			r,
+			inversionHandler,
+		)
+
+		routes.EventoRoutes(
+			r,
+			eventoHandler,
+		)
+
+		// routes.EstudianteRoutes(...)
+
+	})
+
+	// Servidor
+
+	log.Println("Servidor ejecutándose en", cfg.Puerto)
+
+	err = http.ListenAndServe(cfg.Puerto, r)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
