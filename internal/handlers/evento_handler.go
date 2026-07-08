@@ -19,25 +19,7 @@ func NewEventoHandler(store storage.Almacen) *EventoHandler {
 	return &EventoHandler{store: store}
 }
 
-// LISTAR EVENTOS
-func (h *EventoHandler) ObtenerEventos(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(h.store.ListarEventos())
-}
-
-// CREAR EVENTO
-func (h *EventoHandler) CrearEvento(w http.ResponseWriter, r *http.Request) {
-	var e models.Evento
-
-	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
-		return
-	}
-
-	creado := h.store.CrearEvento(e)
-	json.NewEncoder(w).Encode(creado)
-}
-
+f
 // OBTENER POR ID
 func (h *EventoHandler) ObtenerEventoPorID(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
