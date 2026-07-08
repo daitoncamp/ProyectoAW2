@@ -82,7 +82,7 @@ func TestListarInversiones(t *testing.T) {
 
 // TestBuscarInversionPorID verifica que el endpoint devuelva
 // una inversión cuando el ID existe.
-afunc TestBuscarInversionPorID(t *testing.T) {
+func TestBuscarInversionPorID(t *testing.T) {
 
 	// Creamos el almacén simulado.
 	store := &mocks.MockAlmacen{}
