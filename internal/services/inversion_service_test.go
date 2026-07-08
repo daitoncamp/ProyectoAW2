@@ -234,7 +234,7 @@ func TestActualizarInversion(t *testing.T) {
 }
 
 // Verifica que no sea posible actualizar una inversión inexistente.
-func TestActualizarInversionNoExiste {
+func TestActualizarInversionNoExiste(t *testing.T) {
 
 	store := &mocks.MockAlmacen{}
 	service := NewInversionService(store)
