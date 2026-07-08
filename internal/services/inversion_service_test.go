@@ -162,8 +162,8 @@ func TestBuscarInversionPorID(t *testing.T) {
 		t.Fatalf("No se esperaba error: %v", err)
 	}
 
-	if inversion.Nombre != "Prueba" {
-		t.Fatalf("Se esperaba 'Prueba' pero llegó '%s'", inversion.Nombre)
+	if inversion.Nombre != "Fondo Universitario" {
+		t.Fatalf("Se esperaba 'Fondo Universitario' pero llegó '%s'", inversion.Nombre)
 	}
 }
 
