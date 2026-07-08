@@ -49,9 +49,9 @@ func TestCrearEventoHandler(t *testing.T) {
 
 	router.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusOK {
+	if rec.Code != http.StatusCreated {
 		t.Fatalf(
-			"se esperaba 200 pero llegó %d",
+			"se esperaba 201 pero llegó %d",
 			rec.Code,
 		)
 	}
@@ -98,8 +98,6 @@ func TestListarEventosHandler(t *testing.T) {
 			rec.Code,
 		)
 	}
-
-	//asta aqui
 
 	var respuesta []models.Evento
 	err := json.NewDecoder(rec.Body).Decode(&respuesta)
