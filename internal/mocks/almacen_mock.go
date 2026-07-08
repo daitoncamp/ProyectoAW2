@@ -53,7 +53,7 @@ func (m *MockAlmacen) ActualizarInversion(id int, datos models.Inversion) (model
 	return models.Inversion{}, false
 }
 
-func (m *MockAlmacen) BorrarInversion(id int) bool {
+afunc (m *MockAlmacen) BorrarInversion(id int) bool {
 
 	for indice, inv := range m.Inversiones {
 

@@ -10,7 +10,7 @@ import (
 
 // TestRutaProtegidaSinToken verifica que una ruta protegida
 // responda 401 Unauthorized cuando no se envía el token JWT.
-func TestRutaProtegidaSinToken(t *testing.T) {
+x
 
 	r := chi.NewRouter()
 
