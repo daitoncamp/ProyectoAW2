@@ -7,10 +7,22 @@ import (
 )
 
 func EstudianteRoutes(r chi.Router) {
-	r.Get("/estudiantes", handlers.ObtenerEstudiantes)
-	r.Post("/estudiantes", handlers.CrearEstudiante)
 
-	r.Get("/estudiantes/{id}", handlers.ObtenerEstudiante)
-	r.Put("/estudiantes/{id}", handlers.ActualizarEstudiante)
-	r.Delete("/estudiantes/{id}", handlers.EliminarEstudiante)
+	r.Route("/estudiantes", func(r chi.Router) {
+
+		// Obtener todos los estudiantes
+		r.Get("/", handlers.ObtenerEstudiantes)
+
+		// Crear un estudiante
+		r.Post("/", handlers.CrearEstudiante)
+
+		// Obtener un estudiante por ID
+		r.Get("/{id}", handlers.ObtenerEstudiante)
+
+		// Actualizar un estudiante
+		r.Put("/{id}", handlers.ActualizarEstudiante)
+
+		// Eliminar un estudiante
+		r.Delete("/{id}", handlers.EliminarEstudiante)
+	})
 }

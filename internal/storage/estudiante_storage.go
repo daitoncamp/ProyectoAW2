@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+// ================================
+// ESTUDIANTES
+// ================================
+
 var Estudiantes = []models.Estudiante{
 	{
 		ID:              1,
@@ -28,5 +32,14 @@ var Estudiantes = []models.Estudiante{
 	},
 }
 
-var Carreras []models.Carrera
-var EstadosAcademicos []models.EstadoAcademico
+// ================================
+// CARRERAS
+// ================================
+
+var Carreras = []models.Carrera{}
+
+// ================================
+// ESTADOS ACADÉMICOS
+// ================================
+
+var EstadosAcademicos = []models.EstadoAcademico{}

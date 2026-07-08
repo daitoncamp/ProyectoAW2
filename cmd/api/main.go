@@ -63,6 +63,9 @@ func main() {
 		&models.DestinoInversion{},
 		&models.Aporte{},
 		&models.Usuario{},
+		&models.Estudiante{},
+		&models.Carrera{},
+		&models.EstadoAcademico{},
 	)
 
 	if err != nil {
@@ -95,6 +98,7 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(authService)
 	inversionHandler := handlers.NewInversionHandler(inversionService)
+	estudianteHandler := handlers.NewEstudianteHandler(almacen)
 
 	// =====================================================
 	// Router
@@ -121,6 +125,10 @@ func main() {
 		authHandler,
 	)
 
+	routes.EstudianteRoutes(
+	r,
+	estudianteHandler,
+)
 	// =====================================================
 	// Rutas protegidas
 	// =====================================================

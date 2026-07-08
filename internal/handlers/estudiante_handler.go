@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -12,38 +11,49 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// LISTAR ESTUDIANTES
 func ObtenerEstudiantes(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
 	estudiantes := services.ObtenerEstudiantes()
 
-	json.NewEncoder(w).Encode(estudiantes)
+	if err := json.NewEncoder(w).Encode(estudiantes); err != nil {
+		http.Error(w, "Error al generar la respuesta", http.StatusInternalServerError)
+		return
+	}
 }
 
+// CREAR ESTUDIANTE
 func CrearEstudiante(w http.ResponseWriter, r *http.Request) {
 
 	var estudiante models.Estudiante
 
-	err := json.NewDecoder(r.Body).Decode(&estudiante)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&estudiante); err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
 		return
 	}
 
-	fmt.Printf("%+v\n", estudiante)
-
 	services.CrearEstudiante(estudiante)
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
-	json.NewEncoder(w).Encode(estudiante)
+	if err := json.NewEncoder(w).Encode(estudiante); err != nil {
+		http.Error(w, "Error al generar la respuesta", http.StatusInternalServerError)
+		return
+	}
 }
 
+// OBTENER ESTUDIANTE POR ID
 func ObtenerEstudiante(w http.ResponseWriter, r *http.Request) {
 
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+
+	if err != nil {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
 
 	estudiante, err := services.ObtenerEstudiantePorID(id)
 
@@ -52,18 +62,27 @@ func ObtenerEstudiante(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(estudiante)
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(estudiante); err != nil {
+		http.Error(w, "Error al generar la respuesta", http.StatusInternalServerError)
+		return
+	}
 }
 
+// ACTUALIZAR ESTUDIANTE
 func ActualizarEstudiante(w http.ResponseWriter, r *http.Request) {
 
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+
+	if err != nil {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
 
 	var estudiante models.Estudiante
 
-	err := json.NewDecoder(r.Body).Decode(&estudiante)
-
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&estudiante); err != nil {
 		http.Error(w, "JSON inválido", http.StatusBadRequest)
 		return
 	}
@@ -75,19 +94,30 @@ func ActualizarEstudiante(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(estudiante)
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(estudiante); err != nil {
+		http.Error(w, "Error al generar la respuesta", http.StatusInternalServerError)
+		return
+	}
 }
 
+// ELIMINAR ESTUDIANTE
 func EliminarEstudiante(w http.ResponseWriter, r *http.Request) {
 
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 
-	err := services.EliminarEstudiante(id)
+	if err != nil {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
+
+	err = services.EliminarEstudiante(id)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	w.Write([]byte("Estudiante eliminado"))
+	w.WriteHeader(http.StatusNoContent)
 }
