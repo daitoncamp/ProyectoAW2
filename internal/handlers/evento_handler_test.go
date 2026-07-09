@@ -16,7 +16,7 @@ import (
 
 func TestCrearEventoHandler(t *testing.T) {
 
-	mock := &mocks.MockEventoAlmacen{}
+	mock := &mocks.MockAlmacen{}
 
 	service := services.NewEventoService(mock)
 
@@ -66,7 +66,7 @@ func TestCrearEventoHandler(t *testing.T) {
 // segundo test listar
 func TestListarEventosHandler(t *testing.T) {
 
-	mock := &mocks.MockEventoAlmacen{}
+	mock := &mocks.MockAlmacen{}
 
 	// agregamos datos al mock antes de llamar al handler
 	mock.Eventos = append(mock.Eventos, models.Evento{
@@ -113,7 +113,7 @@ func TestListarEventosHandler(t *testing.T) {
 // tercer test obenter
 func TestObtenerEventoHandler(t *testing.T) {
 
-	mock := &mocks.MockEventoAlmacen{}
+	mock := &mocks.MockAlmacen{}
 
 	// precargamos un evento
 	mock.Eventos = []models.Evento{
@@ -154,7 +154,7 @@ func TestObtenerEventoHandler(t *testing.T) {
 // test de actualizar, cuarto
 func TestActualizarEventoHandler(t *testing.T) {
 
-	mock := &mocks.MockEventoAlmacen{}
+	mock := &mocks.MockAlmacen{}
 
 	// evento inicial
 	mock.Eventos = []models.Evento{
@@ -205,7 +205,7 @@ func TestActualizarEventoHandler(t *testing.T) {
 // quinto test: eliminar
 func TestEliminarEventoHandler(t *testing.T) {
 
-	mock := &mocks.MockEventoAlmacen{}
+	mock := &mocks.MockAlmacen{}
 
 	// precargamos un evento
 	mock.Eventos = []models.Evento{

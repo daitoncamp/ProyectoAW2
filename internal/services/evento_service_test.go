@@ -10,7 +10,7 @@ import (
 // Test de creación
 func TestCrearEventoNombreVacio(t *testing.T) {
 
-	store := &mocks.MockEventoAlmacen{}
+	store := &mocks.MockAlmacen{}
 	service := NewEventoService(store)
 
 	evento := models.Evento{
