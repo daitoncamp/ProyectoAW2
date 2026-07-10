@@ -55,3 +55,45 @@ func TestRepositorioSQLite(t *testing.T) {
 		)
 	}
 }
+
+// TestRepositorioSQLiteEventos verifica que un evento creado realmente se almacene y pueda recuperarse desde SQLite en memoria.
+func TestRepositorioSQLiteEventos(t *testing.T) {
+
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("No se pudo abrir la base de datos: %v", err)
+	}
+
+	err = db.AutoMigrate(&models.Evento{})
+	if err != nil {
+		t.Fatalf("Error en AutoMigrate: %v", err)
+	}
+
+	store := NuevoAlmacenSQLite(db)
+
+	evento := models.Evento{
+		Nombre:      "Evento Test",
+		Descripcion: "Evento de prueba",
+		Fecha:       "2026-07-10",
+		Lugar:       "Auditorio",
+		Capacidad:   50,
+		CategoriaID: 1,
+		Organizador: "Asociación Estudiantil",
+		Estado:      "Activo",
+	}
+
+	nuevo := store.CrearEvento(evento)
+
+	encontrado, ok := store.BuscarEventoPorID(nuevo.ID)
+
+	if !ok {
+		t.Fatal("Se esperaba encontrar el evento")
+	}
+
+	if encontrado.Nombre != evento.Nombre {
+		t.Fatalf("Se esperaba %s pero llegó %s",
+			evento.Nombre,
+			encontrado.Nombre,
+		)
+	}
+}

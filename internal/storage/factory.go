@@ -47,11 +47,14 @@ func Inicializar(driver, dsn, rutaDB, backend string) (*Recursos, error) {
 		&models.Aporte{},
 		&models.Usuario{},
 		&models.Evento{},
+		&models.CategoriaEvento{},
+		&models.Asistencia{},
 	); err != nil {
 		return nil, fmt.Errorf("AutoMigrate: %w", err)
 	}
 	almacenGorm := NuevoAlmacenSQLite(gdb)
 	almacenGorm.SembrarSiVacio()
+	almacenGorm.SembrarSiVacioEventos()
 
 	// 2. Elegir el backend de productos/categorias.
 	//    El backend sqlc esta generado para SQLite (sus queries son de SQLite),

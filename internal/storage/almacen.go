@@ -24,4 +24,4 @@ type UserRepository interface {
 	BuscarUsuarioPorEmail(email string) (models.Usuario, bool)
 }
 
-//var _ Almacen = (*Memoria)(nil)
+//var _ Almacen = (*AlmacenSQLite)(nil)

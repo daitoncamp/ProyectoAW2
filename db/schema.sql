@@ -39,4 +39,36 @@ CREATE TABLE aportes (
     FOREIGN KEY (inversion_id)
         REFERENCES inversiones(id)
 );
---------------------------------------------
+
+-- MODULO EVENTOS
+
+CREATE TABLE eventos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT NOT NULL,
+    fecha TEXT NOT NULL,
+    lugar TEXT NOT NULL,
+    capacidad INTEGER NOT NULL,
+    categoria_id INTEGER NOT NULL,
+    organizador TEXT NOT NULL,
+    estado TEXT NOT NULL,
+
+    FOREIGN KEY (categoria_id) REFERENCES categorias_evento(id)
+);
+
+CREATE TABLE categorias_evento (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT NOT NULL
+);
+
+
+CREATE TABLE asistencias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    evento_id INTEGER NOT NULL,
+    estudiante_id INTEGER NOT NULL,
+    presente INTEGER NOT NULL DEFAULT 0,
+    hora_registro TEXT NOT NULL,
+
+    FOREIGN KEY (evento_id) REFERENCES eventos(id)
+);

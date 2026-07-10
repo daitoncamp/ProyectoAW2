@@ -19,16 +19,9 @@ import (
 )
 
 func main() {
-
-	// =====================================================
 	// Cargar configuración
-	// =====================================================
-
 	cfg := config.Cargar()
-
-	// =====================================================
 	// Conexión a la Base de Datos
-	// =====================================================
 
 	var (
 		db  *gorm.DB
@@ -53,15 +46,18 @@ func main() {
 
 	}
 
-	// =====================================================
 	// Crear tablas automáticamente
-	// =====================================================
 
 	err = db.AutoMigrate(
 		&models.Inversion{},
 		&models.TipoInversion{},
 		&models.DestinoInversion{},
 		&models.Aporte{},
+
+		&models.Evento{},
+		&models.CategoriaEvento{},
+		&models.Asistencia{},
+
 		&models.Usuario{},
 	)
 
@@ -69,39 +65,28 @@ func main() {
 		log.Fatal("Error en AutoMigrate: ", err)
 	}
 
-	// =====================================================
 	// Almacén SQLite/PostgreSQL
-	// =====================================================
-
 	almacen := storage.NuevoAlmacenSQLite(db)
-	almacen.SembrarSiVacio()
 
-	// =====================================================
+	almacen.SembrarSiVacio()
+	almacen.SembrarSiVacioEventos()
+
 	// Repositorio de usuarios + Servicio de autenticación
-	// =====================================================
 
 	usuarioRepo := storage.NewUsuarioRepository(db)
 	authService := services.NuevoAuthService(usuarioRepo)
 
-	// =====================================================
 	// Servicios
-	// =====================================================
-
 	inversionService := services.NewInversionService(almacen)
 
-	// =====================================================
+	eventoService := services.NewEventoService(almacen)
 	// Handlers
-	// =====================================================
-
 	authHandler := handlers.NewAuthHandler(authService)
 	inversionHandler := handlers.NewInversionHandler(inversionService)
+	eventoHandler := handlers.NewEventoHandler(eventoService)
 
-	// =====================================================
 	// Router
-	// =====================================================
-
 	r := chi.NewRouter()
-
 	r.Use(middleware.Cors)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -112,19 +97,13 @@ func main() {
 		w.Write([]byte("Servidor funcionando"))
 	})
 
-	// =====================================================
 	// Rutas públicas
-	// =====================================================
-
 	routes.AuthRoutes(
 		r,
 		authHandler,
 	)
 
-	// =====================================================
 	// Rutas protegidas
-	// =====================================================
-
 	r.Group(func(r chi.Router) {
 
 		r.Use(middleware.Auth(authService))
@@ -134,14 +113,16 @@ func main() {
 			inversionHandler,
 		)
 
-		// routes.EventoRoutes(...)
+		routes.EventoRoutes(
+			r,
+			eventoHandler,
+		)
+
 		// routes.EstudianteRoutes(...)
 
 	})
 
-	// =====================================================
 	// Servidor
-	// =====================================================
 
 	log.Println("Servidor ejecutándose en", cfg.Puerto)
 

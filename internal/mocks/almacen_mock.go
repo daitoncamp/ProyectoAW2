@@ -6,6 +6,7 @@ import (
 
 type MockAlmacen struct {
 	Inversiones []models.Inversion
+	Eventos     []models.Evento
 }
 
 // ===============================
@@ -71,26 +72,62 @@ func (m *MockAlmacen) BorrarInversion(id int) bool {
 	return false
 }
 
-// ===============================
-// Eventos (Mock vacío)
-// ===============================
+// Eventos
 
 func (m *MockAlmacen) ListarEventos() []models.Evento {
-	return nil
+	return m.Eventos
 }
 
 func (m *MockAlmacen) BuscarEventoPorID(id int) (models.Evento, bool) {
+
+	for _, e := range m.Eventos {
+		if e.ID == id {
+			return e, true
+		}
+	}
+
 	return models.Evento{}, false
 }
 
 func (m *MockAlmacen) CrearEvento(e models.Evento) models.Evento {
-	return models.Evento{}
+
+	e.ID = len(m.Eventos) + 1
+
+	m.Eventos = append(m.Eventos, e)
+
+	return e
 }
 
-func (m *MockAlmacen) ActualizarEvento(id int, datos models.Evento) (models.Evento, bool) {
+func (m *MockAlmacen) ActualizarEvento(id int, e models.Evento) (models.Evento, bool) {
+
+	for i, evento := range m.Eventos {
+
+		if evento.ID == id {
+
+			e.ID = id
+			m.Eventos[i] = e
+
+			return e, true
+		}
+	}
+
 	return models.Evento{}, false
 }
 
 func (m *MockAlmacen) BorrarEvento(id int) bool {
+
+	for i, e := range m.Eventos {
+
+		if e.ID == id {
+
+			m.Eventos = append(
+				m.Eventos[:i],
+				m.Eventos[i+1:]...,
+			)
+
+			return true
+		}
+	}
+
 	return false
 }
